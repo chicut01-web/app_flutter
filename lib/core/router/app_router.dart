@@ -26,10 +26,12 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
-      final isLoggingIn = state.uri.toString() == '/login';
-      final isSigningUp = state.uri.toString() == '/signup';
+      final path = state.uri.toString();
+      final isLoggingIn = path == '/login';
+      final isSigningUp = path == '/signup';
+      final isAuthCallback = path.startsWith('/auth/callback');
 
-      if (!isLoggedIn && !isLoggingIn && !isSigningUp) {
+      if (!isLoggedIn && !isLoggingIn && !isSigningUp && !isAuthCallback) {
         return '/login';
       }
 
@@ -42,6 +44,17 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(path: '/signup', builder: (context, state) => const SignUpPage()),
+      // Auth callback route for email confirmation redirects
+      GoRoute(
+        path: '/auth/callback',
+        builder: (context, state) {
+          // This route handles the redirect from Supabase after email confirmation
+          // The auth state listener will automatically redirect to home if authenticated
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        },
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             ScaffoldWithNavBar(navigationShell: navigationShell),
